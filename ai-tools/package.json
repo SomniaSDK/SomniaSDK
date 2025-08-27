@@ -1,0 +1,27 @@
+{
+  "name": "@somnia/ai-tools",
+  "version": "1.0.0",
+  "description": "AI-powered smart contract generation for Somnia blockchain",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "dotenv": "^17.2.1",
+    "fs-extra": "^11.2.0",
+    "openai": "^4.20.0",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/chalk": "^0.4.31",
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
