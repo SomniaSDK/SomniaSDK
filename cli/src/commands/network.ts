@@ -202,7 +202,7 @@ networkCommand
         display: 'Somnia Testnet',
         chainId: 50312,
         rpc: 'https://dream-rpc.somnia.network',
-        explorer: 'https://somnia-testnet.blockscout.com',
+        explorer: 'https://shannon-explorer.somnia.network/',
         currency: 'STT',
         description: 'Test network for development'
       },

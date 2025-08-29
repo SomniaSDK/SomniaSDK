@@ -575,14 +575,14 @@ contractCommand
       console.log('\n' + chalk.green('✅ Contract Verified'));
       console.log(chalk.gray('━'.repeat(50)));
       console.log(`${chalk.cyan('Address:')} ${address}`);
-      console.log(`${chalk.cyan('Explorer:')} https://somnia-testnet.blockscout.com/address/${address}`);
+      console.log(`${chalk.cyan('Explorer:')} https://shannon-explorer.somnia.network/address/${address}`);
       
       if (options.name) {
         console.log(`${chalk.cyan('Name:')} ${options.name}`);
       }
       
       console.log(chalk.green('\n🔗 View on Explorer:'));
-      console.log(chalk.blue(`https://somnia-testnet.blockscout.com/address/${address}`));
+      console.log(chalk.blue(`https://shannon-explorer.somnia.network/address/${address}`));
       
     } catch (error: any) {
       console.error(chalk.red('Error verifying contract:'), error.message);

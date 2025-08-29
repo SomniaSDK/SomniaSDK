@@ -31,7 +31,7 @@ export const SOMNIA_NETWORKS: Record<SomniaNetwork, SomniaNetworkConfig> = {
     name: 'Somnia Testnet',
     chainId: 50312, // Updated chain ID
     rpcUrl: 'https://dream-rpc.somnia.network',
-    blockExplorer: 'https://somnia-testnet.blockscout.com',
+    blockExplorer: 'https://shannon-explorer.somnia.network/',
     currency: {
       symbol: 'STT',
       decimals: 18

@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 
 // Import from the SDK
 const { 
-  createTestnetSDK, 
+  createTestnetSDK,
   createMainnetSDK,
   AddressUtils,
   NumberUtils,
@@ -274,7 +274,7 @@ export async function callCommand(address: string, functionName: string, args: s
             
             // Show explorer link
             const explorerBase = network === 'testnet' 
-              ? 'https://somnia-testnet.blockscout.com'
+              ? 'https://shannon-explorer.somnia.network/'
               : 'https://somnia.blockscout.com';
             
             console.log(`${chalk.cyan('Explorer:')} ${explorerBase}/tx/${tx.hash}`);

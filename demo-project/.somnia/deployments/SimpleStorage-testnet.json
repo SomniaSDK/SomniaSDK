@@ -1,0 +1,62 @@
+{
+  "contractName": "SimpleStorage",
+  "address": "0x4Aafe0898BBd6Ed86E51D96667Fca2A7C2d2f574",
+  "transactionHash": "0x86dc215b793c202aa3f61098e633fdebd01d3939f6c1933c7d842e69bd8d0d86",
+  "blockNumber": 162623466,
+  "gasUsed": "1693403",
+  "cost": "10160418000000000",
+  "network": "testnet",
+  "deployer": "0xe01Add0c3640a8314132bAF491d101A38ffEF4f0",
+  "deployedAt": "2025-08-29T18:38:04.982Z",
+  "constructorArgs": [],
+  "sourcePath": "contracts\\SimpleStorage.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "ValueUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getValue",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "increment",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "setValue",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610178806100206000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c80632096525514610046578063552410771461005b578063d09de08a14610070575b600080fd5b60005460405190815260200160405180910390f35b61006e610069366004610102565b610078565b005b61006e6100b3565b60008190556040518181527f4273d0736f60e0dedfe745e86718093d8ec8646ebd2a60cd60643eeced5658119060200160405180910390a150565b60016000808282546100c5919061011b565b90915550506000546040519081527f4273d0736f60e0dedfe745e86718093d8ec8646ebd2a60cd60643eeced5658119060200160405180910390a1565b60006020828403121561011457600080fd5b5035919050565b8082018082111561013c57634e487b7160e01b600052601160045260246000fd5b9291505056fea264697066735822122071d7c20207ac36b1c610f2544dd1b7a52844b01f41a39ae1f3086797b7ac83a264736f6c63430008130033"
+}

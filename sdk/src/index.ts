@@ -3,13 +3,13 @@ export * from './types';
 export * from './provider';
 export * from './wallet';
 export * from './contract';
-export * from './deploy';
+//export * from './deploy';
 export * from './utils';
 
 // Main SDK class
 import { SomniaProvider, createProvider } from './provider';
 import { SomniaWallet, WalletFactory } from './wallet';
-import { SomniaDeployer, createDeployer } from './deploy';
+// import { SomniaDeployer, createDeployer } from './deploy';
 import { ContractFactory } from './contract';
 import { 
   SomniaSDKConfig, 
@@ -24,7 +24,7 @@ import { DebugUtils } from './utils';
  */
 export class SomniaSDK {
   public readonly provider: SomniaProvider;
-  public deployer?: SomniaDeployer;
+  // public deployer?: SomniaDeployer;
   public wallet?: SomniaWallet;
   private config: SomniaSDKConfig;
 
@@ -47,7 +47,7 @@ export class SomniaSDK {
     // Create wallet if configuration provided
     if (config.wallet) {
       this.wallet = WalletFactory.fromConfig(config.wallet, this.provider);
-      this.deployer = createDeployer(this.provider, this.wallet);
+      // this.deployer = createDeployer(this.provider, this.wallet);
     }
 
     DebugUtils.log('Somnia SDK initialized', {
@@ -62,7 +62,7 @@ export class SomniaSDK {
    */
   connectWallet(wallet: SomniaWallet): void {
     this.wallet = wallet.connect(this.provider);
-    this.deployer = createDeployer(this.provider, this.wallet);
+    // this.deployer = createDeployer(this.provider, this.wallet);
     DebugUtils.log('Wallet connected', { address: this.wallet.getAddress() });
   }
 
@@ -94,6 +94,23 @@ export class SomniaSDK {
   }
 
   /**
+   * Get the current provider
+   */
+  getProvider(): SomniaProvider {
+    return this.provider;
+  }
+
+  /**
+   * Get the current wallet
+   */
+  getWallet(): SomniaWallet {
+    if (!this.wallet) {
+      throw new Error('No wallet connected');
+    }
+    return this.wallet;
+  }
+
+  /**
    * Connect to an existing contract
    */
   getContract(address: string, abi: any[]): any {
@@ -101,8 +118,9 @@ export class SomniaSDK {
   }
 
   /**
-   * Deploy a new contract
+   * Deploy a new contract - temporarily disabled
    */
+  /*
   async deployContract(
     bytecode: string,
     abi: any[],
@@ -117,8 +135,26 @@ export class SomniaSDK {
   }
 
   /**
+   * Deploy a pre-compiled contract (for Hardhat)
+   * Constructor arguments should already be encoded in the bytecode
+   */
+  /*
+  async deployCompiledContract(
+    bytecode: string,
+    abi: any[],
+    config: any = {}
+  ): Promise<any> {
+    if (!this.deployer) {
+      throw new Error('No wallet connected - cannot deploy contracts');
+    }
+    
+    return await this.deployer.deployCompiledContract(bytecode, abi, config);
+  }
+
+  /**
    * Simulate a contract deployment
    */
+  /*
   async simulateDeployment(
     bytecode: string,
     abi: any[],
@@ -128,11 +164,9 @@ export class SomniaSDK {
     if (!this.deployer) {
       throw new Error('No wallet connected - cannot simulate deployment');
     }
-    
-    return await this.deployer.simulateDeployment(bytecode, abi, constructorArgs, config);
-  }
 
-  /**
+    return await this.deployer.simulateDeployment(bytecode, abi, constructorArgs, config);
+  }  /**
    * Get current network configuration
    */
   getNetworkConfig(): SomniaNetworkConfig {

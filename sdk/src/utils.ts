@@ -197,7 +197,7 @@ export class TransactionUtils {
   static getExplorerUrl(txHash: string, networkName: string): string {
     const explorers: Record<string, string> = {
       'mainnet': 'https://somnia.blockscout.com',
-      'testnet': 'https://somnia-testnet.blockscout.com',
+      'testnet': 'https://shannon-explorer.somnia.network/',
       'local': ''
     };
 
@@ -211,7 +211,7 @@ export class TransactionUtils {
   static getAddressExplorerUrl(address: string, networkName: string): string {
     const explorers: Record<string, string> = {
       'mainnet': 'https://somnia.blockscout.com',
-      'testnet': 'https://somnia-testnet.blockscout.com',
+      'testnet': 'https://shannon-explorer.somnia.network/',
       'local': ''
     };
 

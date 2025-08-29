@@ -42,7 +42,7 @@ async function testActualNetworkConnection() {
         name: 'Somnia Testnet',
         chainId: 50312, // Use the detected chain ID
         rpcUrl: 'https://dream-rpc.somnia.network',
-        blockExplorer: 'https://somnia-testnet.blockscout.com',
+        blockExplorer: 'https://shannon-explorer.somnia.network/',
         currency: {
           symbol: 'STT',
           decimals: 18

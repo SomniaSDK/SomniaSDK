@@ -225,44 +225,69 @@ export async function deployCommand(contractName: string, options: any) {
         spinner.start('Deploying contract...');
       } else {
         spinner.text = 'Deploying contract...';
-      }      // Deploy using SDK with compiled contract
+      }      // Deploy using direct transaction for Hardhat-compiled contract
       try {
-        const deployment = await sdk.deployContract(
-          compilationResult.bytecode,
-          compilationResult.abi,
-          constructorArgs,
-          {
-            gasLimit: options.gasLimit ? parseInt(options.gasLimit) : undefined,
-            gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined
-          }
-        );
+        // For Hardhat-compiled contracts, deploy the bytecode directly
+        // since constructor arguments are already encoded
+        spinner.text = 'Deploying contract...';
+        
+        // Get the provider directly
+        const provider = sdk.getProvider();
+        const wallet = sdk.getWallet();
+        
+        // Estimate gas for deployment
+        const gasEstimate = await provider.estimateGas({
+          data: compilationResult.bytecode
+        });
+        
+        // Add 20% buffer to gas estimate
+        const gasLimit = gasEstimate + (gasEstimate * BigInt(20)) / BigInt(100);
+        
+        const tx = await wallet.sendTransaction({
+          data: compilationResult.bytecode,
+          gasLimit: options.gasLimit ? BigInt(options.gasLimit) : gasLimit,
+          gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined
+        });
+
+        spinner.text = 'Waiting for transaction confirmation...';
+        const receipt = await tx.wait();
+
+        if (!receipt) {
+          throw new Error('Transaction receipt not found');
+        }
+
+        if (!receipt.contractAddress) {
+          throw new Error('Contract address not found in receipt');
+        }
+
+        const deploymentCost = receipt.gasUsed * (receipt.gasPrice || BigInt(0));
 
         spinner.succeed('Contract deployed successfully!');
         
         console.log('\n' + chalk.green('🎉 Deployment Successful!'));
         console.log(chalk.gray('━'.repeat(50)));
         console.log(`${chalk.cyan('Contract Name:')} ${compilationResult.contractName}`);
-        console.log(`${chalk.cyan('Contract Address:')} ${deployment.address}`);
-        console.log(`${chalk.cyan('Transaction Hash:')} ${deployment.transactionHash}`);
-        console.log(`${chalk.cyan('Block Number:')} ${deployment.receipt.blockNumber}`);
-        console.log(`${chalk.cyan('Gas Used:')} ${deployment.receipt.gasUsed.toLocaleString()}`);
-        console.log(`${chalk.cyan('Deployment Cost:')} ${NumberUtils.formatEther(deployment.deploymentCost)} STT`);
+        console.log(`${chalk.cyan('Contract Address:')} ${receipt.contractAddress}`);
+        console.log(`${chalk.cyan('Transaction Hash:')} ${receipt.hash}`);
+        console.log(`${chalk.cyan('Block Number:')} ${receipt.blockNumber}`);
+        console.log(`${chalk.cyan('Gas Used:')} ${receipt.gasUsed.toLocaleString()}`);
+        console.log(`${chalk.cyan('Deployment Cost:')} ${NumberUtils.formatEther(deploymentCost)} STT`);
         
         // Explorer links  
         const explorerBase = config.network === 'testnet' 
-          ? 'https://somnia-testnet.blockscout.com'
+          ? 'https://shannon-explorer.somnia.network/'
           : 'https://somnia.blockscout.com';
         
-        console.log(`${chalk.cyan('Explorer:')} ${explorerBase}/address/${deployment.address}`);
+        console.log(`${chalk.cyan('Explorer:')} ${explorerBase}/address/${receipt.contractAddress}`);
         
         // Save deployment info
         const deploymentInfo = {
           contractName: compilationResult.contractName,
-          address: deployment.address,
-          transactionHash: deployment.transactionHash,
-          blockNumber: deployment.receipt.blockNumber,
-          gasUsed: deployment.receipt.gasUsed.toString(),
-          cost: deployment.deploymentCost.toString(),
+          address: receipt.contractAddress,
+          transactionHash: receipt.hash,
+          blockNumber: receipt.blockNumber,
+          gasUsed: receipt.gasUsed.toString(),
+          cost: deploymentCost.toString(),
           network: config.network,
           deployer: config.address,
           deployedAt: new Date().toISOString(),
@@ -286,7 +311,7 @@ export async function deployCommand(contractName: string, options: any) {
         }
         
         console.log(chalk.yellow('\n💡 Next steps:'));
-        console.log(chalk.gray(`  somnia call ${deployment.address} <function> [args...]`));
+        console.log(chalk.gray(`  somnia call ${receipt.contractAddress} <function> [args...]`));
         console.log(chalk.gray(`  somnia status  # Check network status`));
         
       } catch (deployError: any) {
