@@ -1,0 +1,10 @@
+{
+  "contractName": "MyNewToken",
+  "address": "Demo Mode - No actual deployment",
+  "network": "testnet",
+  "deployer": "0xe01Add0c3640a8314132bAF491d101A38ffEF4f0",
+  "deployedAt": "2025-08-29T15:18:42.200Z",
+  "constructorArgs": [],
+  "sourcePath": "contracts\\MyNewToken.sol",
+  "status": "Ready for real deployment"
+}

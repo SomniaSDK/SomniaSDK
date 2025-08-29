@@ -13,24 +13,35 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
   },
-  "keywords": ["somnia", "blockchain", "cli", "ethereum", "web3"],
+  "keywords": [
+    "somnia",
+    "blockchain",
+    "cli",
+    "ethereum",
+    "web3"
+  ],
   "author": "Somnia DevKit Team",
   "license": "MIT",
   "dependencies": {
-    "commander": "^11.0.0",
-    "inquirer": "^9.2.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "crypto-js": "^4.2.0",
+    "ethers": "^6.15.0",
+    "fs-extra": "^11.1.1",
+    "hardhat": "^3.0.3",
+    "inquirer": "^9.2.0",
     "ora": "^7.0.0",
-    "@somnia/ai-tools": "^1.0.0",
-    "@somnia/sdk": "^1.0.0"
+    "solc": "^0.8.30"
   },
   "devDependencies": {
-    "@types/node": "^20.8.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.0",
-    "typescript": "^5.2.2",
+    "@types/node": "^20.8.0",
     "eslint": "^8.50.0",
+    "jest": "^29.7.0",
     "prettier": "^3.0.0",
-    "jest": "^29.7.0"
+    "typescript": "^5.2.2"
   },
   "repository": {
     "type": "git",

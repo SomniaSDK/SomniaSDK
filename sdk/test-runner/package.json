@@ -1,0 +1,17 @@
+{
+  "name": "@somnia/sdk-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "ts-node test/basic-test.ts",
+    "example": "ts-node examples/basic-usage.ts"
+  },
+  "dependencies": {
+    "@somnia/sdk": "file:../",
+    "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.11",
+    "typescript": "^5.2.2"
+  }
+}
