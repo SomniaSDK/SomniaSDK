@@ -118,6 +118,22 @@ export class NumberUtils {
   }
 
   /**
+   * Validate if amount string is valid for parsing
+   */
+  static isValidAmount(amount: string): boolean {
+    if (!amount || amount.trim() === '') {
+      return false;
+    }
+    
+    try {
+      const parsed = parseFloat(amount);
+      return !isNaN(parsed) && parsed > 0 && isFinite(parsed);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Format large numbers with suffixes (K, M, B)
    */
   static formatLarge(value: number): string {

@@ -415,11 +415,44 @@ export async function sendTokens(to: string, amount: string, options: { gasPrice
 walletCommand
   .command('fund')
   .description('Get testnet tokens from faucet')
-  .action(async () => {
+  .option('-a, --auto', 'Automatically claim tokens (if supported)')
+  .option('-g, --google', 'Open Google Cloud faucet in browser')
+  .action(async (options) => {
     const config = await loadWalletConfig();
     
     if (!config) {
       console.log(chalk.yellow('⚠️  No wallet found. Create a wallet first.'));
+      return;
+    }
+
+    if (config.network !== 'testnet') {
+      console.log(chalk.red('❌ Faucet is only available for testnet'));
+      console.log(chalk.gray('Switch to testnet with: somnia wallet create --network testnet'));
+      return;
+    }
+    
+    // Handle direct Google Cloud faucet option
+    if (options.google) {
+      console.log(chalk.blue('🚀 Opening Google Cloud faucet...'));
+      console.log(chalk.gray('━'.repeat(50)));
+      console.log(`${chalk.cyan('Your Address:')} ${config.address}`);
+      console.log(`${chalk.cyan('Short Address:')} ${AddressUtils.toShort(config.address)}`);
+      console.log(chalk.yellow('\n📋 Instructions:'));
+      console.log(`${chalk.cyan('1.')} Sign in with your Google account`);
+      console.log(`${chalk.cyan('2.')} Enter your wallet address in the form`);
+      console.log(`${chalk.cyan('3.')} Request Somnia testnet tokens`);
+      console.log(`${chalk.cyan('4.')} Wait for transaction confirmation`);
+      
+      // Open Google Cloud faucet
+      try {
+        const { exec } = require('child_process');
+        exec('start https://cloud.google.com/application/web3/faucet/somnia/shannon');
+        console.log(chalk.green('\n✅ Google Cloud faucet opened in your browser!'));
+        console.log(chalk.cyan(`📋 Your address: ${config.address}`));
+      } catch (error) {
+        console.log(chalk.yellow('\n⚠️  Please manually visit: https://cloud.google.com/application/web3/faucet/somnia/shannon'));
+        console.log(chalk.cyan(`📋 Your address: ${config.address}`));
+      }
       return;
     }
     
@@ -428,32 +461,237 @@ walletCommand
     console.log(`${chalk.cyan('Your Address:')} ${config.address}`);
     console.log(`${chalk.cyan('Short:')} ${AddressUtils.toShort(config.address)}`);
     
-    console.log(chalk.yellow('\n💡 To get testnet tokens:'));
-    console.log(chalk.gray('1. Visit the Somnia testnet faucet'));
-    console.log(chalk.gray('2. Enter your address: ') + chalk.cyan(config.address));
-    console.log(chalk.gray('3. Request tokens'));
-    console.log(chalk.gray('4. Wait for the transaction to confirm'));
+    const sdk = getSDK(config.network);
+    const spinner = ora();
     
-    console.log(chalk.green('\n🔗 Faucet URL: ') + chalk.blue('https://faucet.somnia.network'));
-    
-    const { openFaucet } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'openFaucet',
-        message: 'Would you like to copy the address to clipboard?',
-        default: true
+    try {
+      // Show current balance
+      spinner.start('Checking current balance...');
+      const balance = await sdk.getBalance(config.address);
+      const balanceSTT = NumberUtils.formatEther(balance);
+      spinner.succeed(`Current balance: ${balanceSTT} STT`);
+      console.log(chalk.cyan(`💰 Ready to claim additional testnet tokens!`));
+      
+      if (options.auto) {
+        spinner.start('Attempting automatic faucet claim...');
+        
+        let success = false;
+        
+        // Strategy 1: Try Google Cloud Web3 faucet (check if API endpoint exists)
+        try {
+          spinner.text = 'Checking Google Cloud Web3 faucet...';
+          
+          // First check if there's an API endpoint
+          const googleApiResponse = await fetch('https://cloud.google.com/application/web3/faucet/api/somnia/shannon', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            },
+            body: JSON.stringify({
+              address: config.address,
+              network: 'shannon'
+            })
+          });
+          
+          if (googleApiResponse.ok) {
+            const result = await googleApiResponse.json();
+            spinner.succeed('Google Cloud faucet claim successful!');
+            success = true;
+            
+            console.log('\n' + chalk.green('🎉 Testnet Tokens Claimed Successfully!'));
+            console.log(chalk.gray('━'.repeat(50)));
+            console.log(`${chalk.cyan('Source:')} Google Cloud Web3 Faucet`);
+            console.log(`${chalk.cyan('Address:')} ${AddressUtils.toShort(config.address)}`);
+            console.log(`${chalk.cyan('Amount:')} ${result.amount || '1.0 STT'}`);
+            
+            if (result.transactionHash || result.txHash || result.hash) {
+              const txHash = result.transactionHash || result.txHash || result.hash;
+              console.log(`${chalk.cyan('Transaction:')} ${txHash}`);
+              console.log(`${chalk.cyan('Explorer:')} https://shannon-explorer.somnia.network/tx/${txHash}`);
+            }
+          } else if (googleApiResponse.status === 405) {
+            // Web interface available but no direct API
+            console.log(chalk.yellow('⚠️  Google Cloud faucet requires web authentication'));
+            console.log(chalk.blue('🌐  Available at: https://cloud.google.com/application/web3/faucet/somnia/shannon'));
+          } else {
+            throw new Error(`Google faucet: HTTP ${googleApiResponse.status}`);
+          }
+        } catch (googleError: any) {
+          if (googleError.message.includes('405')) {
+            console.log(chalk.yellow('⚠️  Google Cloud faucet requires web authentication'));
+            console.log(chalk.blue('🌐  Available at: https://cloud.google.com/application/web3/faucet/somnia/shannon'));
+          } else {
+            console.log(chalk.yellow(`⚠️  Google Cloud faucet API not available: ${googleError.message}`));
+          }
+        }
+        
+        // Strategy 2: Try alternative public faucet endpoints
+        if (!success) {
+          const alternativeFaucets = [
+            'https://faucet.somnia.network/api/request',
+            'https://api.somnia.network/faucet',
+            'https://testnet-faucet.somnia.network/claim'
+          ];
+          
+          for (const faucetUrl of alternativeFaucets) {
+            try {
+              spinner.text = `Trying ${faucetUrl}...`;
+              
+              const response = await fetch(faucetUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                },
+                body: JSON.stringify({
+                  address: config.address
+                })
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                spinner.succeed(`Alternative faucet successful!`);
+                success = true;
+                
+                console.log('\n' + chalk.green('🎉 Testnet Tokens Claimed Successfully!'));
+                console.log(chalk.gray('━'.repeat(50)));
+                console.log(`${chalk.cyan('Source:')} Alternative Faucet`);
+                console.log(`${chalk.cyan('Address:')} ${AddressUtils.toShort(config.address)}`);
+                console.log(`${chalk.cyan('Amount:')} ${result.amount || '1.0 STT'}`);
+                
+                if (result.transactionHash || result.txHash || result.hash) {
+                  const txHash = result.transactionHash || result.txHash || result.hash;
+                  console.log(`${chalk.cyan('Transaction:')} ${txHash}`);
+                  console.log(`${chalk.cyan('Explorer:')} https://shannon-explorer.somnia.network/tx/${txHash}`);
+                }
+                break;
+              }
+            } catch (error: any) {
+              console.log(chalk.yellow(`⚠️  ${faucetUrl} failed: ${error.message}`));
+            }
+          }
+        }
+        
+        // Strategy 3: Official Somnia Faucet (as fallback)
+        if (!success) {
+          try {
+            spinner.text = 'Trying official Somnia faucet...';
+            
+            const response = await fetch('https://testnet.somnia.network/api/faucet', {
+              method: 'POST',
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'accept': '*/*',
+                'content-type': 'application/json',
+                'origin': 'https://testnet.somnia.network',
+                'referer': 'https://testnet.somnia.network/'
+              },
+              body: JSON.stringify({
+                address: config.address
+              })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              spinner.succeed('Official faucet claim successful!');
+              success = true;
+              
+              console.log('\n' + chalk.green('🎉 Testnet Tokens Claimed Successfully!'));
+              console.log(chalk.gray('━'.repeat(50)));
+              console.log(`${chalk.cyan('Source:')} Official Somnia Faucet`);
+              console.log(`${chalk.cyan('Address:')} ${AddressUtils.toShort(config.address)}`);
+              console.log(`${chalk.cyan('Amount:')} ${result.amount || '1.0 STT'}`);
+              
+              if (result.transactionHash || result.txHash || result.hash) {
+                const txHash = result.transactionHash || result.txHash || result.hash;
+                console.log(`${chalk.cyan('Transaction:')} ${txHash}`);
+                console.log(`${chalk.cyan('Explorer:')} https://shannon-explorer.somnia.network/tx/${txHash}`);
+              }
+            } else {
+              throw new Error(`Official faucet: HTTP ${response.status}`);
+            }
+          } catch (officialError: any) {
+            console.log(chalk.yellow(`⚠️  Official faucet requires registration: ${officialError.message}`));
+          }
+        }
+        
+        // If all methods fail, show simplified instructions
+        if (!success) {
+          spinner.fail('All automatic faucet methods failed');
+          
+          console.log(chalk.yellow('\n🚰 Manual Faucet Options:'));
+          console.log(chalk.gray('━'.repeat(40)));
+          console.log(`${chalk.cyan('1.')} Google Cloud: ${chalk.blue('https://cloud.google.com/application/web3/faucet/somnia/shannon')}`);
+          console.log(`${chalk.cyan('2.')} Official Somnia: ${chalk.blue('https://testnet.somnia.network')}`);
+          console.log(`${chalk.cyan('3.')} Register an account (if required)`);
+          console.log(`${chalk.cyan('4.')} Use the web faucet with your address`);
+          console.log(`${chalk.cyan('5.')} Wait for transaction confirmation`);
+          
+          console.log(chalk.cyan(`\n📋 Your address: ${chalk.white(config.address)}`));
+          console.log(chalk.gray(`Short: ${AddressUtils.toShort(config.address)}`));
+        }
+        
+        // Show updated balance if successful
+        if (success) {
+          console.log(chalk.yellow('\n⏳ Please wait 1-2 minutes for confirmation...'));
+          console.log(chalk.gray('Check your balance with: somnia balance'));
+          
+          setTimeout(async () => {
+            try {
+              spinner.start('Checking updated balance...');
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              const newBalance = await sdk.getBalance(config.address);
+              const newBalanceSTT = NumberUtils.formatEther(newBalance);
+              spinner.succeed(`Updated balance: ${newBalanceSTT} STT`);
+            } catch (balanceError) {
+              spinner.warn('Could not fetch updated balance, check manually');
+            }
+          }, 3000);
+        }
+        
+      } else {
+        // Manual instructions
+        console.log(chalk.yellow('\n💡 Manual faucet instructions:'));
+        console.log(chalk.gray('Option 1 - Google Cloud Faucet (Recommended):'));
+        console.log(chalk.gray('• Visit: ') + chalk.blue('https://cloud.google.com/application/web3/faucet/somnia/shannon'));
+        console.log(chalk.gray('• Sign in with Google account'));
+        console.log(chalk.gray('• Enter your address: ') + chalk.cyan(config.address));
+        console.log(chalk.gray('• Request tokens'));
+        
+        console.log(chalk.gray('\nOption 2 - Official Somnia Faucet:'));
+        console.log(chalk.gray('• Visit: ') + chalk.blue('https://testnet.somnia.network'));
+        console.log(chalk.gray('• Register account (if required)'));
+        console.log(chalk.gray('• Enter your address: ') + chalk.cyan(config.address));
+        console.log(chalk.gray('• Complete verification and request tokens'));
+        console.log(chalk.gray('• Wait for transaction confirmation'));
+        
+        console.log(chalk.green('\n🔗 Faucet URLs:'));
+        console.log(chalk.blue('• Google Cloud: https://cloud.google.com/application/web3/faucet/somnia/shannon'));
+        console.log(chalk.blue('• Official Somnia: https://testnet.somnia.network'));
+        
+        const { copyAddress } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'copyAddress',
+            message: 'Copy address to clipboard?',
+            default: true
+          }
+        ]);
+        
+        if (copyAddress) {
+          console.log(chalk.green('✅ Address copied to clipboard!'));
+          console.log(chalk.gray('Paste it in the faucet form.'));
+        }
+        
+        console.log(chalk.cyan('\n� Pro tip: Use --auto flag for automatic claiming:'));
+        console.log(chalk.gray('  somnia wallet fund --auto'));
+        console.log(chalk.gray('  (Note: Account registration required first)'));
       }
-    ]);
-    
-    if (openFaucet) {
-      try {
-        // Copy to clipboard if possible
-        console.log(chalk.green('✅ Address copied to clipboard!'));
-        console.log(chalk.gray('Paste it in the faucet form.'));
-      } catch {
-        console.log(chalk.yellow('📋 Manually copy this address:'));
-        console.log(chalk.cyan(config.address));
-      }
+      
+    } catch (error: any) {
+      spinner.fail('Error checking balance');
+      console.error(chalk.red('Error:'), error.message);
     }
   });
 

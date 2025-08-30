@@ -140,6 +140,76 @@
       "artifacts": [
         "SimpleStorage"
       ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\demo-project\\contracts\\SimpleToken.sol": {
+      "lastModificationDate": 1756556269744,
+      "contentHash": "b0822b37efda168b4321ee162de0b179",
+      "sourceName": "contracts/SimpleToken.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "SimpleToken"
+      ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\demo-project\\contracts\\SimpleNFT.sol": {
+      "lastModificationDate": 1756556954736,
+      "contentHash": "6d588b821658f4c098e828e552803bb3",
+      "sourceName": "contracts/SimpleNFT.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "SimpleNFT"
+      ]
     }
   }
 }

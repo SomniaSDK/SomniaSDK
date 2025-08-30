@@ -199,36 +199,136 @@ export async function deployCommand(contractName: string, options: any) {
 
       // Check if constructor arguments are needed
       const constructorAbi = compilationResult.abi.find((item: any) => item.type === 'constructor');
-      if (constructorAbi && constructorAbi.inputs && constructorAbi.inputs.length > 0 && constructorArgs.length === 0) {
+      const needsConstructorArgs = constructorAbi && constructorAbi.inputs && constructorAbi.inputs.length > 0;
+      
+      if (needsConstructorArgs && constructorArgs.length === 0) {
         spinner.stop();
-        console.log(chalk.yellow('\n⚠️  This contract requires constructor arguments:'));
-        constructorAbi.inputs.forEach((input: any, index: number) => {
-          console.log(chalk.gray(`  ${index + 1}. ${input.name} (${input.type})`));
+        
+        // Auto-generate sensible default constructor arguments
+        const autoArgs = constructorAbi.inputs.map((input: any) => {
+          const inputName = input.name.toLowerCase();
+          
+          switch (input.type) {
+            case 'string':
+              if (inputName.includes('name')) {
+                return contractName; // Use contract name as default
+              } else if (inputName.includes('symbol')) {
+                return contractName.slice(0, 5).toUpperCase(); // Use first 5 chars as symbol
+              } else {
+                return `Default${input.name}`;
+              }
+            
+            case 'uint8':
+              if (inputName.includes('decimal')) {
+                return 18; // Standard ERC20 decimals
+              }
+              return 1;
+            
+            case 'uint256':
+              if (inputName.includes('supply')) {
+                return 1000000; // 1 million tokens
+              }
+              return 100;
+            
+            case 'address':
+              return config.address; // Use deployer address
+            
+            case 'bool':
+              return true;
+            
+            default:
+              // For other uint types
+              if (input.type.startsWith('uint')) {
+                return 100;
+              }
+              // For other int types
+              if (input.type.startsWith('int')) {
+                return 100;
+              }
+              return 0;
+          }
         });
         
-        const { providedArgs } = await inquirer.prompt([
-          {
-            type: 'input',
-            name: 'providedArgs',
-            message: 'Enter constructor arguments as JSON array:',
-            default: '[]'
-          }
-        ]);
+        console.log(chalk.yellow('\n🔧 Auto-generated constructor arguments:'));
+        constructorAbi.inputs.forEach((input: any, index: number) => {
+          console.log(`  ${chalk.cyan(input.name)} (${chalk.gray(input.type)}): ${chalk.green(JSON.stringify(autoArgs[index]))}`);
+        });
         
-        try {
-          constructorArgs = JSON.parse(providedArgs);
-        } catch (error) {
-          console.error(chalk.red('Invalid JSON format for constructor arguments'));
-          return;
+        if (options.auto) {
+          // Auto mode: use generated values without prompting
+          constructorArgs = autoArgs;
+          console.log(chalk.green('✓ Auto mode: Using auto-generated constructor arguments'));
+        } else {
+          // Interactive mode: ask if user wants to customize
+          const { useDefaults } = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'useDefaults',
+            message: 'Use these auto-generated values?',
+            default: true
+          }]);
+
+          if (useDefaults) {
+            constructorArgs = autoArgs;
+            console.log(chalk.green('✓ Using auto-generated constructor arguments'));
+          } else {
+            console.log(chalk.gray('\nProvide custom values:'));
+            const { providedArgs } = await inquirer.prompt([
+              {
+                type: 'input',
+                name: 'providedArgs',
+                message: 'Enter constructor arguments as JSON array:',
+                validate: (input) => {
+                  try {
+                    const parsed = JSON.parse(input);
+                    if (!Array.isArray(parsed)) {
+                      return 'Must be a valid JSON array';
+                    }
+                    if (parsed.length !== constructorAbi.inputs.length) {
+                      return `Expected ${constructorAbi.inputs.length} arguments, got ${parsed.length}`;
+                    }
+                    return true;
+                  } catch (error) {
+                    return 'Must be valid JSON array format';
+                  }
+                }
+              }
+            ]);
+            
+            try {
+              constructorArgs = JSON.parse(providedArgs);
+            } catch (error) {
+              console.error(chalk.red('Invalid JSON format for constructor arguments'));
+              return;
+            }
+          }
         }
         
         spinner.start('Deploying contract...');
+      } else if (needsConstructorArgs) {
+        // Constructor arguments were provided via command line
+        spinner.text = 'Deploying contract...';
       } else {
+        // No constructor arguments needed
+        console.log(chalk.green('✓ No constructor arguments required'));
         spinner.text = 'Deploying contract...';
       }      // Deploy using direct transaction for Hardhat-compiled contract
       try {
-        // For Hardhat-compiled contracts, deploy the bytecode directly
-        // since constructor arguments are already encoded
+        // For Hardhat-compiled contracts, we need to encode constructor arguments
+        // and append them to the bytecode
+        spinner.text = 'Preparing deployment data...';
+        
+        let deploymentData = compilationResult.bytecode;
+        
+        // If contract has constructor arguments, encode and append them
+        if (constructorArgs && constructorArgs.length > 0) {
+          const contractInterface = new ethers.Interface(compilationResult.abi);
+          const encodedArgs = contractInterface.encodeDeploy(constructorArgs);
+          // Remove the '0x' prefix from encoded args and append to bytecode
+          deploymentData = compilationResult.bytecode + encodedArgs.slice(2);
+          
+          console.log(chalk.gray(`Constructor args encoded: ${constructorArgs.length} parameters`));
+        }
+        
         spinner.text = 'Deploying contract...';
         
         // Get the provider directly
@@ -237,14 +337,14 @@ export async function deployCommand(contractName: string, options: any) {
         
         // Estimate gas for deployment
         const gasEstimate = await provider.estimateGas({
-          data: compilationResult.bytecode
+          data: deploymentData
         });
         
         // Add 20% buffer to gas estimate
         const gasLimit = gasEstimate + (gasEstimate * BigInt(20)) / BigInt(100);
         
         const tx = await wallet.sendTransaction({
-          data: compilationResult.bytecode,
+          data: deploymentData,
           gasLimit: options.gasLimit ? BigInt(options.gasLimit) : gasLimit,
           gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined
         });
@@ -315,47 +415,18 @@ export async function deployCommand(contractName: string, options: any) {
         console.log(chalk.gray(`  somnia status  # Check network status`));
         
       } catch (deployError: any) {
-        // If real deployment fails, show simulation
-        spinner.text = 'Real deployment failed, showing simulation...';
+        spinner.fail('Deployment failed');
+        console.error(chalk.red('Deployment error:'), deployError.message);
+        console.log(chalk.yellow('Full error details:'), deployError);
         
-        try {
-          const simulation = await sdk.simulateDeployment(
-            compilationResult.bytecode,
-            compilationResult.abi,
-            constructorArgs,
-            {
-              gasLimit: options.gasLimit ? parseInt(options.gasLimit) : undefined,
-              gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined
-            }
-          );
-          
-          spinner.succeed('Contract compilation and simulation successful!');
-          
-          console.log('\n' + chalk.green('🎉 Contract Ready for Deployment!'));
-          console.log(chalk.gray('━'.repeat(50)));
-          console.log(`${chalk.cyan('Contract Name:')} ${compilationResult.contractName}`);
-          console.log(`${chalk.cyan('Bytecode Size:')} ${compilationResult.bytecode.length / 2 - 1} bytes`);
-          console.log(`${chalk.cyan('Functions:')} ${compilationResult.abi.filter((item: any) => item.type === 'function').length}`);
-          console.log(`${chalk.cyan('Network:')} ${config.network}`);
-          console.log(`${chalk.cyan('Deployer:')} ${config.address}`);
-          console.log(`${chalk.cyan('Balance:')} ${NumberUtils.formatEther(balance)} STT`);
-          
-          if (simulation.gasEstimate) {
-            console.log(`${chalk.cyan('Estimated Gas:')} ${simulation.gasEstimate.toLocaleString()}`);
-          }
-          if (simulation.estimatedCost) {
-            console.log(`${chalk.cyan('Estimated Cost:')} ${NumberUtils.formatEther(simulation.estimatedCost)} STT`);
-          }
-          
-          console.log(chalk.yellow('\n💡 Deployment failed with:'), deployError.message);
-          console.log(chalk.gray('But compilation was successful! Check your balance and network connection.'));
-          
-        } catch (simError: any) {
-          spinner.fail('Both deployment and simulation failed');
-          console.error(chalk.red('Deployment error:'), deployError.message);
-          console.error(chalk.red('Simulation error:'), simError.message);
-          return;
+        if (deployError.message.includes('require(false)')) {
+          console.log(chalk.yellow('\n💡 This might be a constructor parameter issue.'));
+          console.log(chalk.gray('Try adjusting the constructor arguments:'));
+          console.log(chalk.gray('- Check parameter types and order'));
+          console.log(chalk.gray('- Ensure numeric values are reasonable'));
+          console.log(chalk.gray('- Verify string parameters are valid'));
         }
+        return;
       }
       
     } catch (error: any) {

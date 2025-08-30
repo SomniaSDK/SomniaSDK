@@ -67,6 +67,7 @@ program
   .option('-g, --gas-limit <limit>', 'Gas limit')
   .option('-p, --gas-price <price>', 'Gas price in gwei')
   .option('-v, --verify', 'Verify contract on block explorer')
+  .option('-a, --auto', 'Automatically use generated constructor arguments without prompting')
   .action(deployCommand);
 
 // Call contract functions
