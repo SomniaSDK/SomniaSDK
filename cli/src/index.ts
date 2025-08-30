@@ -121,17 +121,8 @@ program
     await showStatus();
   });
 
-// Error handling
-program.exitOverride();
-
-try {
-  program.parse();
-} catch (err: any) {
-  if (err.code !== 'commander.executeSubCommandAsync') {
-    console.error(chalk.red('Error:'), err.message);
-    process.exit(1);
-  }
-}
+// Parse command line arguments
+program.parse();
 
 // Show help if no command provided
 if (!process.argv.slice(2).length) {

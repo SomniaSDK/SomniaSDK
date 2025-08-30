@@ -142,16 +142,31 @@ export default {
 
       const contractName = path.basename(contractPath, '.sol');
       
-      // Install dependencies if node_modules doesn't exist
-      const nodeModulesPath = path.join(this.projectRoot, 'node_modules');
+      // Install dependencies if node_modules doesn't exist in ESM directory
+      const esmDir = path.join(this.projectRoot, 'hardhat-esm');
+      const nodeModulesPath = path.join(esmDir, 'node_modules');
       if (!await fs.pathExists(nodeModulesPath)) {
         console.log('Installing Hardhat dependencies...');
-        execSync('npm install', { cwd: this.projectRoot, stdio: 'inherit' });
+        execSync('npm install', { cwd: esmDir, stdio: 'inherit' });
       }
 
-      // Run Hardhat compilation
+      // Copy contract to ESM directory
+      const esmContractsDir = path.join(esmDir, 'contracts');
+      await fs.ensureDir(esmContractsDir);
+      const contractFileName = path.basename(contractPath);
+      const esmContractPath = path.join(esmContractsDir, contractFileName);
+      await fs.copy(contractPath, esmContractPath);
+
+      // Run Hardhat compilation using ESM directory
       console.log('Compiling contract with Hardhat...');
-      execSync('npx hardhat compile', { cwd: this.projectRoot, stdio: 'inherit' });
+      execSync('npx hardhat compile', { cwd: esmDir, stdio: 'inherit' });
+
+      // Copy artifacts back to main directory
+      const esmArtifactsDir = path.join(esmDir, 'artifacts');
+      await fs.ensureDir(this.artifactsPath);
+      if (await fs.pathExists(esmArtifactsDir)) {
+        await fs.copy(esmArtifactsDir, this.artifactsPath);
+      }
 
       // Read compilation artifacts
       const artifactPath = path.join(
@@ -192,8 +207,26 @@ export default {
     const results: CompilationResult[] = [];
     
     if (contractFiles.length > 0) {
-      // Compile all at once with Hardhat
-      execSync('npx hardhat compile', { cwd: this.projectRoot, stdio: 'inherit' });
+      // Copy all contracts to ESM directory
+      const esmDir = path.join(this.projectRoot, 'hardhat-esm');
+      const esmContractsDir = path.join(esmDir, 'contracts');
+      await fs.ensureDir(esmContractsDir);
+      
+      for (const contractPath of contractFiles) {
+        const contractFileName = path.basename(contractPath);
+        const esmContractPath = path.join(esmContractsDir, contractFileName);
+        await fs.copy(contractPath, esmContractPath);
+      }
+
+      // Compile all at once with Hardhat using ESM directory
+      execSync('npx hardhat compile', { cwd: esmDir, stdio: 'inherit' });
+
+      // Copy artifacts back to main directory
+      const esmArtifactsDir = path.join(esmDir, 'artifacts');
+      await fs.ensureDir(this.artifactsPath);
+      if (await fs.pathExists(esmArtifactsDir)) {
+        await fs.copy(esmArtifactsDir, this.artifactsPath);
+      }
 
       // Read all artifacts
       for (const contractPath of contractFiles) {

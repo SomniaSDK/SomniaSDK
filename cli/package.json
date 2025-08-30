@@ -1,15 +1,17 @@
 {
   "name": "@somnia/cli",
   "version": "1.0.0",
-  "description": "Command-line interface for Somnia blockchain development",
+  "description": "Somnia blockchain development CLI with smart contract support",
   "main": "dist/index.js",
   "bin": {
     "somnia": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "node build.js",
+    "dev": "node build.js && node dist/index.js",
     "test": "jest",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts"
   },
@@ -18,7 +20,8 @@
     "blockchain",
     "cli",
     "ethereum",
-    "web3"
+    "web3",
+    "hardhat"
   ],
   "author": "Somnia DevKit Team",
   "license": "MIT",
@@ -37,7 +40,8 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.0",
-    "@types/node": "^20.8.0",
+    "@types/node": "^20.19.11",
+    "@types/ws": "^8.18.1",
     "eslint": "^8.50.0",
     "jest": "^29.7.0",
     "prettier": "^3.0.0",

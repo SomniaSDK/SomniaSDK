@@ -1,0 +1,110 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\udhay\\SomniaSDK\\cli\\hardhat-esm\\contracts\\NFTTreasury.sol": {
+      "lastModificationDate": 1756563215249,
+      "contentHash": "dbebff52117a292224fc4cb2bdf91932",
+      "sourceName": "contracts/NFTTreasury.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "NFTTreasury"
+      ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\cli\\hardhat-esm\\contracts\\MyToken.sol": {
+      "lastModificationDate": 1756478720441,
+      "contentHash": "e1b9ab3453bbbbcaeda502440db5079c",
+      "sourceName": "contracts/MyToken.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "MyToken"
+      ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\cli\\hardhat-esm\\contracts\\SimpleStorage.sol": {
+      "lastModificationDate": 1756483271875,
+      "contentHash": "db604f96981b2afa89d5939a33ee9a15",
+      "sourceName": "contracts/SimpleStorage.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "SimpleStorage"
+      ]
+    }
+  }
+}

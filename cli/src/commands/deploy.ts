@@ -88,12 +88,17 @@ export async function deployCommand(contractName: string, options: any) {
         return;
       }
       
+      // Debug: log the files found
+      console.log(chalk.gray(`Found ${solFiles.length} contract files:`), solFiles.join(', '));
+      
       const { selectedContract } = await inquirer.prompt([
         {
           type: 'list',
           name: 'selectedContract',
           message: 'Select contract to deploy:',
-          choices: solFiles.map((f: string) => ({ name: f, value: path.join(contractsDir, f) }))
+          choices: solFiles.map((f: string) => ({ name: f, value: path.join(contractsDir, f) })),
+          pageSize: 10,
+          loop: false
         }
       ]);
       
