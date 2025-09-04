@@ -20,35 +20,10 @@ if (!GROQ_API_KEY) {
 async function generateContract(description) {
   console.log(`🤖 Generating contract for: "${description}"`);
   
-  // Create project name based on input
-  let projectName;
-  
-  // First, check for standard contract types
-  if (description.toLowerCase().includes('erc721')) {
-    projectName = 'ERC721Contract';
-  } else if (description.toLowerCase().includes('erc20')) {
-    projectName = 'ERC20Contract';
-  } else {
-    // For custom names, convert to PascalCase and remove special characters
-    projectName = description
-      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
-      .trim()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
-      
-    // If empty or just spaces, use default name
-    if (!projectName) {
-      projectName = 'MyContract';
-    }
-    
-    // Add "Contract" suffix if it doesn't already contain it
-    if (!projectName.includes('Contract')) {
-      projectName += 'Contract';
-    }
-  }
-  
-  console.log(`📝 Using contract name: ${projectName}`);
+  // Create project name
+  const projectName = description.includes('ERC721') ? 'ERC721Contract' : 
+                     description.includes('ERC20') ? 'ERC20Contract' : 
+                     'MyContract';
   
   // Create contracts folder if it doesn't exist
   const contractsDir = './contracts';
@@ -64,7 +39,7 @@ async function generateContract(description) {
     // Call Groq API
     console.log('🔄 Calling Groq AI...');
     const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'llama-3.1-8b-instant',
+      model: 'llama3-8b-8192',
       messages: [{
         role: 'user',
         content: `Write a Solidity smart contract for: "${description}"
