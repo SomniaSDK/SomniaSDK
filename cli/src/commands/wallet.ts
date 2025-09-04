@@ -5,6 +5,7 @@ import ora from 'ora';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ethers } from 'ethers';
+import * as CryptoJS from 'crypto-js';
 
 // Import from the SDK
 const { 
@@ -363,10 +364,33 @@ export async function sendTokens(to: string, amount: string, options: { gasPrice
     
     const spinner = ora('Preparing transaction...').start();
     
-    // Decrypt wallet
-    const wallet = await ethers.Wallet.fromEncryptedJson(config.encrypted!, password);
-    const sdk = getSDK(config.network);
-    sdk.importWallet(wallet.privateKey);
+    let sdk: any;
+    
+    // Try to decrypt wallet (supports both crypto-js and ethers.js encryption)
+    try {
+      let wallet: ethers.Wallet;
+      
+      // Check if it's crypto-js encrypted (starts with U2FsdGVkX1)
+      if (config.encrypted!.startsWith('U2FsdGVkX1')) {
+        const decryptedPrivateKey = CryptoJS.AES.decrypt(config.encrypted!, password).toString(CryptoJS.enc.Utf8);
+        if (!decryptedPrivateKey) {
+          spinner.fail('Failed to decrypt wallet');
+          console.error(chalk.red('Error: Invalid password'));
+          return;
+        }
+        wallet = new ethers.Wallet(decryptedPrivateKey);
+      } else {
+        // Try ethers.js encrypted JSON format
+        wallet = await ethers.Wallet.fromEncryptedJson(config.encrypted!, password);
+      }
+      
+      sdk = getSDK(config.network);
+      sdk.importWallet(wallet.privateKey);
+    } catch (error) {
+      spinner.fail('Failed to decrypt wallet');
+      console.error(chalk.red('Error: Invalid password or corrupted wallet'));
+      return;
+    }
     
     // Check balance
     const balance = await sdk.getBalance();
@@ -380,8 +404,8 @@ export async function sendTokens(to: string, amount: string, options: { gasPrice
     
     spinner.text = 'Sending transaction...';
     
-    // Send transaction
-    const tx = await sdk.sendTransaction({
+    // Send transaction using the wallet
+    const tx = await sdk.getWallet().sendTransaction({
       to,
       value: sendAmount,
       gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined

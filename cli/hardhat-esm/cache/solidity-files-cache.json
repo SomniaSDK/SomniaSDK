@@ -105,6 +105,41 @@
       "artifacts": [
         "SimpleStorage"
       ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\cli\\hardhat-esm\\contracts\\Somnia.sol": {
+      "lastModificationDate": 1756992663141,
+      "contentHash": "c2ef8461e146de7b71d57a31ef05af20",
+      "sourceName": "contracts/Somnia.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "Somnia"
+      ]
     }
   }
 }
