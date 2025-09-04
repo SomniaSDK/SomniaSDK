@@ -1,13 +1,13 @@
 {
   "contractName": "NFTTreasury",
-  "address": "0x1F958d24298e04e8516EA972eFc2A3Bd50B4BF4F",
-  "transactionHash": "0xec8234a00d41cf5942ba35d787f2080b3db28fea950810bc2a097bc411df1f8a",
-  "blockNumber": 163331855,
+  "address": "0x86Ef8D5519a0c16409e5181D56284078d332CC69",
+  "transactionHash": "0xdc11f173917edd2428680212200837da0fda64889da58cb66f15da20c11b75a1",
+  "blockNumber": 167674129,
   "gasUsed": "9978926",
   "cost": "59873556000000000",
   "network": "testnet",
   "deployer": "0xe01Add0c3640a8314132bAF491d101A38ffEF4f0",
-  "deployedAt": "2025-08-30T14:26:17.842Z",
+  "deployedAt": "2025-09-04T15:49:13.491Z",
   "constructorArgs": [
     "NFTTreasury",
     "NFTTR"

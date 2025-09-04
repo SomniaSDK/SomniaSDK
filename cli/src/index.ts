@@ -80,6 +80,7 @@ program
   .option('-a, --abi <file>', 'ABI file path')
   .option('-v, --value <value>', 'ETH value to send')
   .option('-g, --gas-limit <limit>', 'Gas limit')
+  .option('-y, --yes', 'Skip confirmation prompts')
   .action(callCommand);
 
 // Generate code

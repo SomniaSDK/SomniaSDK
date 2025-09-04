@@ -33,9 +33,11 @@ somnia deploy --file ./contracts/MyToken.sol      # Deploy specific file
 
 ### 📞 **Call Contract Functions**
 ```bash
-somnia call 0x742d... get                         # Call view function
-somnia call 0x742d... set 42                      # Call state function
-somnia call 0x742d... transfer 0x123... 100       # Transfer tokens
+somnia call 0x742d... getValue                          # Call view function
+somnia call 0x742d... setValue 123                      # Call state function
+somnia call 0x742d... transfer 0x123... 100             # Transfer tokens
+somnia call 0x742d... increment                         #Increment by 1
+#These commands changes for every contract as we are calling functions
 ```
 
 ### 🌐 **Network Commands**

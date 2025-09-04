@@ -4,6 +4,7 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as CryptoJS from 'crypto-js';
 import { ethers } from 'ethers';
 
 // Import from the SDK
@@ -74,13 +75,24 @@ export async function callCommand(address: string, functionName: string, args: s
       }
       
       try {
-        abi = await fs.readJson(abiPath);
+        const abiData = await fs.readJson(abiPath);
+        // Handle Hardhat artifact format
+        if (abiData.abi && Array.isArray(abiData.abi)) {
+          abi = abiData.abi;
+        } else if (Array.isArray(abiData)) {
+          abi = abiData;
+        } else {
+          console.error(chalk.red('Invalid ABI format. Expected array or Hardhat artifact.'));
+          return;
+        }
       } catch (error) {
         console.error(chalk.red('Error loading ABI file:'), error);
         return;
       }
     } else {
-      // Try to find ABI in deployments
+      // Try to find ABI in deployments automatically
+      console.log(chalk.gray('🔍 Searching for contract ABI...'));
+      
       const deploymentsDir = path.join(process.cwd(), '.somnia', 'deployments');
       if (await fs.pathExists(deploymentsDir)) {
         const files = await fs.readdir(deploymentsDir);
@@ -89,45 +101,80 @@ export async function callCommand(address: string, functionName: string, args: s
         for (const file of deploymentFiles) {
           const deployment = await fs.readJson(path.join(deploymentsDir, file));
           if (deployment.address?.toLowerCase() === address.toLowerCase()) {
-            // Use simple ABI for demo
-            abi = [
-              {
-                "inputs": [],
-                "name": "get",
-                "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-                "stateMutability": "view",
-                "type": "function"
-              },
-              {
-                "inputs": [{ "internalType": "uint256", "name": "_value", "type": "uint256" }],
-                "name": "set",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-              }
-            ];
+            abi = deployment.abi;
+            console.log(chalk.green(`✓ Found ABI for ${deployment.contractName} contract`));
             break;
           }
         }
       }
       
+      // If not found in deployments, try artifacts directory
       if (abi.length === 0) {
-        console.log(chalk.yellow('⚠️  No ABI found. Using basic storage contract ABI.'));
+        const artifactsDir = path.join(process.cwd(), 'artifacts', 'contracts');
+        if (await fs.pathExists(artifactsDir)) {
+          const contractDirs = await fs.readdir(artifactsDir);
+          
+          for (const contractDir of contractDirs) {
+            const contractPath = path.join(artifactsDir, contractDir);
+            if ((await fs.stat(contractPath)).isDirectory()) {
+              const files = await fs.readdir(contractPath);
+              const jsonFiles = files.filter(f => f.endsWith('.json') && !f.endsWith('.dbg.json'));
+              
+              for (const jsonFile of jsonFiles) {
+                const artifactPath = path.join(contractPath, jsonFile);
+                const artifact = await fs.readJson(artifactPath);
+                if (artifact.abi && Array.isArray(artifact.abi)) {
+                  // For now, try the first artifact found - in a real scenario, 
+                  // we'd need a better way to match contract to address
+                  abi = artifact.abi;
+                  console.log(chalk.yellow(`⚠️  Using ABI from ${jsonFile} (auto-detected)`));
+                  break;
+                }
+              }
+              if (abi.length > 0) break;
+            }
+          }
+        }
+      }
+      
+      if (abi.length === 0) {
+        console.log(chalk.yellow('⚠️  No ABI found. Using basic ERC20 token ABI.'));
         
-        // Default to simple storage ABI
+        // Default to ERC20 ABI for token contracts
         abi = [
           {
-            "inputs": [],
-            "name": "get",
-            "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+            "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+            "name": "balanceOf",
+            "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
             "stateMutability": "view",
             "type": "function"
           },
           {
-            "inputs": [{ "internalType": "uint256", "name": "_value", "type": "uint256" }],
-            "name": "set",
-            "outputs": [],
-            "stateMutability": "nonpayable",
+            "inputs": [],
+            "name": "name",
+            "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "inputs": [],
+            "name": "symbol", 
+            "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "inputs": [],
+            "name": "totalSupply",
+            "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "inputs": [],
+            "name": "decimals",
+            "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
+            "stateMutability": "view",
             "type": "function"
           }
         ];
@@ -157,14 +204,24 @@ export async function callCommand(address: string, functionName: string, args: s
     console.log(`${chalk.cyan('Type:')} ${isReadOnly ? 'Read-only (view)' : 'State-changing (payable)'}`);
     
     try {
-      const contract = sdk.getContract(address, abi);
       
       if (isReadOnly) {
         // Read-only call
+        const contract = sdk.getContract(address, abi);
         const spinner = ora('Calling contract function...').start();
         
         try {
-          const result = await contract.call(functionName, args);
+          // Add timeout wrapper for contract calls
+          const callWithTimeout = (fn: Promise<any>, timeoutMs: number = 30000) => {
+            return Promise.race([
+              fn,
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Contract call timeout - try again or check network connection')), timeoutMs)
+              )
+            ]);
+          };
+          
+          const result = await callWithTimeout(contract.call(functionName, args));
           
           spinner.succeed('Function call successful');
           
@@ -189,7 +246,22 @@ export async function callCommand(address: string, functionName: string, args: s
           
         } catch (error: any) {
           spinner.fail('Function call failed');
-          console.error(chalk.red('Error:'), ErrorUtils.formatUserError(error));
+          
+          // Handle specific contract errors
+          if (error.code === 'CALL_EXCEPTION') {
+            if (error.reason === 'require(false)' || error.data === '0x') {
+              console.error(chalk.red('Contract Error:'), 'Function call reverted');
+              console.log(chalk.yellow('Possible causes:'));
+              console.log(chalk.gray('  • Function has a require() statement that failed'));
+              console.log(chalk.gray('  • Contract state doesn\'t allow this call'));
+              console.log(chalk.gray('  • Function expects different parameters'));
+              console.log(chalk.gray('  • Contract may not be properly initialized'));
+            } else {
+              console.error(chalk.red('Contract Error:'), error.reason || 'Function execution failed');
+            }
+          } else {
+            console.error(chalk.red('Error:'), ErrorUtils.formatUserError(error));
+          }
         }
         
       } else {
@@ -212,14 +284,42 @@ export async function callCommand(address: string, functionName: string, args: s
         const spinner = ora('Preparing transaction...').start();
         
         try {
-          // Decrypt wallet
-          const wallet = await ethers.Wallet.fromEncryptedJson(config.encrypted!, password);
+          // Decrypt wallet (supports both crypto-js and ethers.js encryption)
+          let wallet: ethers.Wallet;
+          
+          // Check if it's crypto-js encrypted (starts with U2FsdGVkX1)
+          if (config.encrypted!.startsWith('U2FsdGVkX1')) {
+            const decryptedPrivateKey = CryptoJS.AES.decrypt(config.encrypted!, password).toString(CryptoJS.enc.Utf8);
+            if (!decryptedPrivateKey) {
+              spinner.fail('Failed to decrypt wallet');
+              console.error(chalk.red('Invalid password'));
+              return;
+            }
+            wallet = new ethers.Wallet(decryptedPrivateKey);
+          } else {
+            // Try ethers.js encrypted JSON format
+            wallet = await ethers.Wallet.fromEncryptedJson(config.encrypted!, password);
+          }
+          
           sdk.importWallet(wallet.privateKey);
+          
+          // Create contract AFTER wallet is imported
+          const contract = sdk.getContract(address, abi);
           
           spinner.text = 'Simulating transaction...';
           
+          // Add timeout wrapper for contract operations
+          const callWithTimeout = (fn: Promise<any>, timeoutMs: number = 30000) => {
+            return Promise.race([
+              fn,
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Operation timeout - try again or check network connection')), timeoutMs)
+              )
+            ]);
+          };
+          
           // Simulate first
-          const simulation = await contract.simulate(functionName, args);
+          const simulation = await callWithTimeout(contract.simulate(functionName, args));
           
           if (!simulation.success) {
             spinner.fail('Transaction simulation failed');
@@ -227,17 +327,22 @@ export async function callCommand(address: string, functionName: string, args: s
             return;
           }
           
+          spinner.stop(); // Stop spinner before showing prompts
           console.log(`\n${chalk.cyan('Gas Estimate:')} ${simulation.gasUsed.toLocaleString()}`);
           
-          // Confirm transaction
-          const { confirm } = await inquirer.prompt([
-            {
-              type: 'confirm',
-              name: 'confirm',
-              message: 'Send transaction?',
-              default: true
-            }
-          ]);
+          // Confirm transaction (unless --yes flag is used)
+          let confirm = options.yes || false;
+          if (!confirm) {
+            const result = await inquirer.prompt([
+              {
+                type: 'confirm',
+                name: 'confirm',
+                message: 'Send transaction?',
+                default: true
+              }
+            ]);
+            confirm = result.confirm;
+          }
           
           if (!confirm) {
             console.log(chalk.yellow('Transaction cancelled'));
@@ -246,18 +351,18 @@ export async function callCommand(address: string, functionName: string, args: s
           
           spinner.start('Sending transaction...');
           
-          // Send transaction
-          const tx = await contract.send(functionName, args, {
+          // Send transaction with timeout
+          const tx = await callWithTimeout(contract.send(functionName, args, {
             gasLimit: Number(simulation.gasUsed) + 50000, // Add buffer
             gasPrice: options.gasPrice ? NumberUtils.parseGwei(options.gasPrice) : undefined,
             value: options.value ? NumberUtils.parseEther(options.value) : undefined
-          });
+          }));
           
           spinner.text = 'Waiting for confirmation...';
           
           console.log(`\n${chalk.cyan('Transaction Hash:')} ${tx.hash}`);
           
-          const receipt = await sdk.waitForTransaction(tx.hash);
+          const receipt = await callWithTimeout(sdk.waitForTransaction(tx.hash), 60000); // 60s timeout for confirmation
           
           if (receipt && receipt.status === 1) {
             spinner.succeed('Transaction confirmed!');
