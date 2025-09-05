@@ -1,13 +1,13 @@
 {
   "contractName": "MyNewToken",
-  "address": "0x61AC981fE1C2DFa5A8A0b010ea9C7877896A738d",
-  "transactionHash": "0xf87bd0d10a54ff75837d0cff036da78f1f37d3542bb5bc789f0f441fd09caf79",
-  "blockNumber": 168098568,
+  "address": "0x74B05aB99485bc7ca628f47829898Ce864596d34",
+  "transactionHash": "0xc387935831dd0877d8d8b816f19b27b82ae3f86e70046228c928341f4e0993c4",
+  "blockNumber": 168554791,
   "gasUsed": "7607568",
   "cost": "45645408000000000",
   "network": "testnet",
-  "deployer": "0xe01Add0c3640a8314132bAF491d101A38ffEF4f0",
-  "deployedAt": "2025-09-05T03:41:01.010Z",
+  "deployer": "0xdB630944101765cfb1f6836AE7579Eee1cdBbCBC",
+  "deployedAt": "2025-09-05T16:26:34.426Z",
   "constructorArgs": [
     "MyNewToken",
     "MYNEW",
