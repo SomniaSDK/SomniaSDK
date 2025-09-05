@@ -1,0 +1,9 @@
+{
+  "name": "@somnia/hardhat-esm",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.22.10"
+  }
+}
