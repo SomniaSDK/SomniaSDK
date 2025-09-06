@@ -210,6 +210,41 @@
       "artifacts": [
         "SimpleNFT"
       ]
+    },
+    "C:\\Users\\udhay\\SomniaSDK\\cli\\hardhat-esm\\contracts\\SimpleToken.sol": {
+      "lastModificationDate": 1757078858336,
+      "contentHash": "b0822b37efda168b4321ee162de0b179",
+      "sourceName": "contracts/SimpleToken.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "SimpleToken"
+      ]
     }
   }
 }

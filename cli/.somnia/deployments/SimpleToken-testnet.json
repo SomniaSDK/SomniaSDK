@@ -1,13 +1,13 @@
 {
   "contractName": "SimpleToken",
-  "address": "0x29CbBF02aFa6B223109cd7256cf0D0C741f399d0",
-  "transactionHash": "0x783c23aed9855af0172b8185aabce663690921d04d9a83c46b2e2606b12aa031",
-  "blockNumber": 163261966,
+  "address": "0x265c0Bb202468671234A48B7cF60EAF025e5D019",
+  "transactionHash": "0x259740d82dbba9c0e0b87ea3c075417f7c8d3aae7bf1e3c9c76bd8f617171c18",
+  "blockNumber": 169326555,
   "gasUsed": "4643565",
   "cost": "27861390000000000",
   "network": "testnet",
   "deployer": "0xe01Add0c3640a8314132bAF491d101A38ffEF4f0",
-  "deployedAt": "2025-08-30T12:29:04.231Z",
+  "deployedAt": "2025-09-06T14:00:38.694Z",
   "constructorArgs": [
     "SimpleToken",
     "SIMPL",

@@ -383,7 +383,7 @@ export async function deployCommand(contractName: string, options: any) {
           ? 'https://shannon-explorer.somnia.network/'
           : 'https://somnia.blockscout.com';
         
-        console.log(`${chalk.cyan('Explorer:')} ${explorerBase}/address/${receipt.contractAddress}`);
+        console.log(`${chalk.cyan('Explorer:')} ${explorerBase}/tx/${receipt.hash}`);
         
         // Save deployment info
         const deploymentInfo = {
