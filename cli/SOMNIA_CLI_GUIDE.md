@@ -17,11 +17,12 @@ somnia wallet import             # Import existing wallet
 somnia wallet fund               # Get testnet tokens
 ```
 
-### 📄 **Create Contracts**
+### 🤖 **Create Contracts with AI**
 ```bash
-somnia contract create MyToken --template erc20    # Create ERC20 token
-somnia contract create MyNFT --template erc721     # Create NFT contract
-somnia contract create Storage --template basic    # Create basic contract
+somnia contract create --prompt "Simple NFT minter"           # AI generates NFT contract
+somnia contract create --prompt "ERC20 token with 1M supply"  # AI generates ERC20 token
+somnia contract create --prompt "Voting contract for DAO"     # AI generates voting contract
+somnia contract create --prompt "MultiSig wallet"             # AI generates multisig contract
 ```
 
 ### 🚀 **Deploy Contracts**
@@ -70,13 +71,13 @@ somnia wallet fund
 somnia balance
 ```
 
-### 3. **Deploy Your First Contract**
+### 3. **Generate and Deploy Your First Contract**
 ```bash
-# Create ERC20 token contract
-somnia contract create MyToken --template erc20
+# Generate ERC20 token contract with AI
+somnia contract create --prompt "ERC20 token named MyToken with 1 million supply"
 
 # Deploy it
-somnia deploy MyToken
+somnia deploy TokenContract
 
 # Call functions
 somnia call <deployed-address> name        # Get token name
@@ -86,7 +87,7 @@ somnia call <deployed-address> totalSupply # Get total supply
 ### 4. **Advanced Contract Interactions**
 ```bash
 # Deploy with constructor arguments
-somnia deploy MyToken --constructor-args '["TokenName", "TKN", 18, 1000000]'
+somnia deploy MyContract --constructor-args '["TokenName", "TKN", 18, 1000000]'
 
 # Call with specific gas settings
 somnia call <address> transfer <to> <amount> --gas-limit 100000
@@ -103,30 +104,31 @@ somnia call <address> deposit --value 1.5
 somnia wallet create              # Create wallet
 somnia wallet fund               # Get testnet tokens
 
-# 2. Contract Development
-somnia contract create DeFiToken --template erc20
-# Edit contracts/DeFiToken.sol
+# 2. AI Contract Generation
+somnia contract create --prompt "DeFi token with staking rewards"
+# AI generates contracts/DeFiContract.sol
 
 # 3. Deploy & Test
-somnia deploy DeFiToken
+somnia deploy DeFiContract
 somnia call <address> name       # Test deployment
 
 # 4. Interact
-somnia call <address> mint <address> 1000
-somnia call <address> transfer <to> 100
+somnia call <address> stake 1000
+somnia call <address> claimRewards
 ```
 
 ## 🌟 **Key Features**
 
 ✅ **Real Wallet Integration** - Import your existing wallets
 ✅ **Live Network Connection** - Direct Somnia testnet/mainnet access
-✅ **Contract Templates** - ERC20, ERC721, MultiSig, Basic storage
+✅ **AI Contract Generation** - Powered by Groq AI (LLaMA 3) for smart contracts
 ✅ **Gas Optimization** - Automatic gas estimation and optimization
 ✅ **Transaction Simulation** - Test before spending gas
 ✅ **Error Handling** - Clear error messages and debugging
 ✅ **Explorer Integration** - Direct links to block explorer
+✅ **OpenZeppelin Standards** - AI generates secure, production-ready contracts
 
-## 🎉 **Success! Your CLI is Ready**
+## 🎉 **Success! Your AI-Powered CLI is Ready**
 
 The **Somnia CLI** is now fully functional with:
 - ✅ Live testnet connectivity (Block: 162,480,000+)

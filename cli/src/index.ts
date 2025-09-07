@@ -2,6 +2,7 @@
 
 import { program } from 'commander';
 import chalk from 'chalk';
+import dotenv from 'dotenv';
 import { initCommand } from './commands/init.js';
 import { deployCommand } from './commands/deploy.js';
 import { callCommand } from './commands/call.js';
@@ -10,6 +11,9 @@ import { walletCommand } from './commands/wallet.js';
 import { contractCommand } from './commands/contract.js';
 import { networkCommand } from './commands/network.js';
 import { configCommand } from './commands/config.js';
+
+// Load environment variables
+dotenv.config();
 
 const pkg = require('../package.json');
 

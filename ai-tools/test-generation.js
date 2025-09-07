@@ -1,4 +1,8 @@
 import pkg from './dist/contract-gen.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const { ContractGenerator } = pkg;
 
 async function testGroqGeneration() {
@@ -7,7 +11,7 @@ async function testGroqGeneration() {
   const generator = new ContractGenerator({
     outputDir: './contracts',
     verbose: true,
-    groqApiKey: 'GROQ_API_KEY'
+    groqApiKey: process.env.GROQ_API_KEY
   });
   
   // Test ERC721 generation
