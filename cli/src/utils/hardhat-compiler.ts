@@ -102,8 +102,7 @@ export class HardhatCompiler {
 
     pkg.devDependencies = pkg.devDependencies || {};
     const requiredDevDeps: Record<string, string> = {
-      hardhat: '^3.0.3',
-      '@nomicfoundation/hardhat-toolbox': '^6.1.0'
+      hardhat: '^3.0.4'
     };
     for (const [name, version] of Object.entries(requiredDevDeps)) {
       if (!pkg.devDependencies[name]) {
@@ -156,39 +155,15 @@ export class HardhatCompiler {
    * Create default Hardhat configuration
    */
   private async createHardhatConfig(): Promise<void> {
-    const config = `import "@nomicfoundation/hardhat-toolbox";
-  
-  /** @type import('hardhat/config').HardhatUserConfig */
-  export default {
-    solidity: {
-      version: "0.8.19",
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 200
-        }
-      }
-    },
-    networks: {
-      hardhat: {},
-      somnia_testnet: {
-        url: "https://dream-rpc.somnia.network",
-        chainId: 50312,
-        accounts: []
-      },
-      somnia_mainnet: {
-        url: "https://rpc.somnia.network", 
-        chainId: 50311,
-        accounts: []
-      }
-    },
-    paths: {
-      sources: "./contracts",
-      tests: "./test",
-      cache: "./cache",
-      artifacts: "./artifacts"
-    }
-  };
+    const config = `export default {
+  solidity: { version: "0.8.19", settings: { optimizer: { enabled: true, runs: 200 } } },
+  networks: {
+    hardhat: { type: "edr-simulated" },
+    somnia_testnet: { type: "http", url: "https://dream-rpc.somnia.network", chainId: 50312, accounts: [] },
+    somnia_mainnet: { type: "http", url: "https://rpc.somnia.network", chainId: 50311, accounts: [] }
+  },
+  paths: { sources: "./contracts", tests: "./test", cache: "./cache", artifacts: "./artifacts" }
+}
   `;
   
     await fs.writeFile(this.hardhatConfigPath, config);

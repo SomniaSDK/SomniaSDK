@@ -1,6 +1,6 @@
 {
   "name": "somnia-cli-devkit",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "Somnia blockchain development CLI with smart contract support",
   "main": "dist/index.js",
   "publishConfig": {
