@@ -1,0 +1,44 @@
+{
+  "name": "somnia-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server exposing Somnia blockchain tools to AI copilots",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "somnia-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && node dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "somnia",
+    "blockchain",
+    "ai-tools",
+    "claude"
+  ],
+  "author": "Somnia DevKit Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "somnia-cli-devkit": "^1.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.13",
+    "typescript": "^5.9.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/austinjeremiah/SomniaSDK.git",
+    "directory": "mcp-server"
+  }
+}
