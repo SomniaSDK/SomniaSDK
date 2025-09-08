@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 
 export interface CompilationResult {
   contractName: string;
@@ -49,6 +49,90 @@ export class HardhatCompiler {
   }
 
   /**
+   * Run Hardhat command using npx (cross-platform solution)
+   */
+  private runHardhatCommand(args: string[]): void {
+    try {
+      // Use npx to run hardhat - this automatically finds the correct installation
+      const result = spawnSync('npx', ['hardhat', ...args], {
+        cwd: this.projectRoot,
+        stdio: 'pipe',
+        shell: true,
+        encoding: 'utf8'
+      });
+
+      if (result.error) {
+        throw new Error(`Failed to spawn hardhat: ${result.error.message}`);
+      }
+
+      if (result.status !== 0) {
+        const errorOutput = result.stderr || result.stdout || 'Unknown compilation error';
+        throw new Error(`Hardhat command failed: ${errorOutput}`);
+      }
+
+      // Log successful output if needed
+      if (result.stdout) {
+        console.log(result.stdout);
+      }
+
+    } catch (error: any) {
+      throw new Error(`Hardhat execution failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Ensure project is ESM and has required devDependencies installed
+   */
+  private async ensureProjectSetup(): Promise<void> {
+    const packageJsonPath = path.join(this.projectRoot, 'package.json');
+
+    // Create minimal package.json if missing
+    if (!await fs.pathExists(packageJsonPath)) {
+      await this.createPackageJson();
+    }
+
+    // Ensure type: module and required devDependencies
+    const pkg = await fs.readJson(packageJsonPath).catch(() => ({} as any));
+    let mutated = false;
+
+    if (pkg.type !== 'module') {
+      pkg.type = 'module';
+      mutated = true;
+    }
+
+    pkg.devDependencies = pkg.devDependencies || {};
+    const requiredDevDeps: Record<string, string> = {
+      hardhat: '^3.0.3',
+      '@nomicfoundation/hardhat-toolbox': '^6.1.0'
+    };
+    for (const [name, version] of Object.entries(requiredDevDeps)) {
+      if (!pkg.devDependencies[name]) {
+        pkg.devDependencies[name] = version;
+        mutated = true;
+      }
+    }
+
+    if (mutated) {
+      await fs.writeJson(packageJsonPath, pkg, { spaces: 2 });
+    }
+
+    // Install if node_modules is missing or hardhat binary not present
+    const nodeModulesDir = path.join(this.projectRoot, 'node_modules');
+    const hardhatBin = path.join(nodeModulesDir, '.bin', process.platform === 'win32' ? 'hardhat.cmd' : 'hardhat');
+    const needInstall = !await fs.pathExists(nodeModulesDir) || !await fs.pathExists(hardhatBin);
+    if (needInstall) {
+      console.log('Installing Hardhat dependencies in project...');
+      const result = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['install'], {
+        cwd: this.projectRoot,
+        stdio: 'inherit'
+      });
+      if (result.status !== 0) {
+        throw new Error('npm install failed for Hardhat dependencies');
+      }
+    }
+  }
+
+  /**
    * Initialize Hardhat configuration if it doesn't exist
    */
   async initializeHardhat(): Promise<void> {
@@ -73,40 +157,40 @@ export class HardhatCompiler {
    */
   private async createHardhatConfig(): Promise<void> {
     const config = `import "@nomicfoundation/hardhat-toolbox";
-
-/** @type import('hardhat/config').HardhatUserConfig */
-export default {
-  solidity: {
-    version: "0.8.19",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
+  
+  /** @type import('hardhat/config').HardhatUserConfig */
+  export default {
+    solidity: {
+      version: "0.8.19",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        }
       }
-    }
-  },
-  networks: {
-    hardhat: {},
-    somnia_testnet: {
-      url: "https://dream-rpc.somnia.network",
-      chainId: 50312,
-      accounts: []
     },
-    somnia_mainnet: {
-      url: "https://rpc.somnia.network", 
-      chainId: 50311,
-      accounts: []
+    networks: {
+      hardhat: {},
+      somnia_testnet: {
+        url: "https://dream-rpc.somnia.network",
+        chainId: 50312,
+        accounts: []
+      },
+      somnia_mainnet: {
+        url: "https://rpc.somnia.network", 
+        chainId: 50311,
+        accounts: []
+      }
+    },
+    paths: {
+      sources: "./contracts",
+      tests: "./test",
+      cache: "./cache",
+      artifacts: "./artifacts"
     }
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts"
-  }
-};
-`;
-
+  };
+  `;
+  
     await fs.writeFile(this.hardhatConfigPath, config);
   }
 
@@ -118,13 +202,14 @@ export default {
       name: "somnia-project",
       version: "1.0.0",
       description: "Somnia blockchain smart contract project",
+      type: "module",
       scripts: {
         compile: "hardhat compile",
         test: "hardhat test",
         deploy: "hardhat run scripts/deploy.js"
       },
       devDependencies: {
-        "hardhat": "^2.26.3",
+        "hardhat": "^3.0.3",
         "@nomicfoundation/hardhat-toolbox": "^6.1.0"
       }
     };
@@ -139,34 +224,21 @@ export default {
     try {
       // Ensure Hardhat is initialized
       await this.initializeHardhat();
+      await this.ensureProjectSetup();
 
       const contractName = path.basename(contractPath, '.sol');
       
-      // Install dependencies if node_modules doesn't exist in ESM directory
-      const esmDir = path.join(this.projectRoot, 'hardhat-esm');
-      const nodeModulesPath = path.join(esmDir, 'node_modules');
-      if (!await fs.pathExists(nodeModulesPath)) {
-        console.log('Installing Hardhat dependencies...');
-        execSync('npm install', { cwd: esmDir, stdio: 'inherit' });
-      }
-
-      // Copy contract to ESM directory
-      const esmContractsDir = path.join(esmDir, 'contracts');
-      await fs.ensureDir(esmContractsDir);
+      // Ensure contract exists under project's contracts dir
+      const contractsDir = path.join(this.projectRoot, 'contracts');
+      await fs.ensureDir(contractsDir);
       const contractFileName = path.basename(contractPath);
-      const esmContractPath = path.join(esmContractsDir, contractFileName);
-      await fs.copy(contractPath, esmContractPath);
-
-      // Run Hardhat compilation using ESM directory
-      console.log('Compiling contract with Hardhat...');
-      execSync('npx hardhat compile', { cwd: esmDir, stdio: 'inherit' });
-
-      // Copy artifacts back to main directory
-      const esmArtifactsDir = path.join(esmDir, 'artifacts');
-      await fs.ensureDir(this.artifactsPath);
-      if (await fs.pathExists(esmArtifactsDir)) {
-        await fs.copy(esmArtifactsDir, this.artifactsPath);
+      const localContractPath = path.join(contractsDir, contractFileName);
+      if (path.resolve(localContractPath) !== path.resolve(contractPath)) {
+        await fs.copy(contractPath, localContractPath);
       }
+
+      // Compile using npx hardhat (cross-platform solution)
+      this.runHardhatCommand(['compile']);
 
       // Read compilation artifacts
       const artifactPath = path.join(
@@ -200,6 +272,7 @@ export default {
    */
   async compileAllContracts(): Promise<CompilationResult[]> {
     await this.initializeHardhat();
+    await this.ensureProjectSetup();
 
     const contractsDir = path.join(this.projectRoot, 'contracts');
     const contractFiles = await this.findSolidityFiles(contractsDir);
@@ -207,26 +280,8 @@ export default {
     const results: CompilationResult[] = [];
     
     if (contractFiles.length > 0) {
-      // Copy all contracts to ESM directory
-      const esmDir = path.join(this.projectRoot, 'hardhat-esm');
-      const esmContractsDir = path.join(esmDir, 'contracts');
-      await fs.ensureDir(esmContractsDir);
-      
-      for (const contractPath of contractFiles) {
-        const contractFileName = path.basename(contractPath);
-        const esmContractPath = path.join(esmContractsDir, contractFileName);
-        await fs.copy(contractPath, esmContractPath);
-      }
-
-      // Compile all at once with Hardhat using ESM directory
-      execSync('npx hardhat compile', { cwd: esmDir, stdio: 'inherit' });
-
-      // Copy artifacts back to main directory
-      const esmArtifactsDir = path.join(esmDir, 'artifacts');
-      await fs.ensureDir(this.artifactsPath);
-      if (await fs.pathExists(esmArtifactsDir)) {
-        await fs.copy(esmArtifactsDir, this.artifactsPath);
-      }
+      // Compile all contracts using npx hardhat
+      this.runHardhatCommand(['compile']);
 
       // Read all artifacts
       for (const contractPath of contractFiles) {
@@ -259,9 +314,10 @@ export default {
    */
   async clean(): Promise<void> {
     try {
-      execSync('npx hardhat clean', { cwd: this.projectRoot, stdio: 'inherit' });
+      this.runHardhatCommand(['clean']);
     } catch (error) {
-      // Ignore errors if hardhat is not installed
+      // Ignore errors if hardhat is not available
+      console.warn('Could not clean Hardhat artifacts:', error);
     }
   }
 

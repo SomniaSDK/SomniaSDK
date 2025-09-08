@@ -22,8 +22,7 @@ export class ContractGenerator {
 
   constructor(config: ContractGeneratorConfig) {
     this.config = config;
-    
-    // Initialize Groq client
+
     const apiKey = config.groqApiKey || process.env.GROQ_API_KEY;
     if (!apiKey) {
       throw new Error('GROQ_API_KEY is required in environment variables or config');
@@ -36,7 +35,7 @@ export class ContractGenerator {
     const spinner = ora('🤖 Generating smart contract with AI...').start();
     
     try {
-      // Create project name based on description
+      
       const contractName = this.generateContractName(description);
       
       if (this.config.verbose) {
@@ -96,22 +95,20 @@ export class ContractGenerator {
       return 'MultiSigContract';
     }
     
-    // For custom names, convert to PascalCase and remove special characters
+    // For custom names, keep it simple - just first word
     let contractName = description
       .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
       .trim()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
+      .split(' ')[0] // Only take first word
+      .charAt(0).toUpperCase() + description
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .trim()
+      .split(' ')[0]
+      .slice(1).toLowerCase();
       
     // If empty or just spaces, use default name
     if (!contractName) {
       contractName = 'MyContract';
-    }
-    
-    // Add "Contract" suffix if it doesn't already contain it
-    if (!contractName.includes('Contract')) {
-      contractName += 'Contract';
     }
     
     return contractName;
@@ -123,8 +120,9 @@ export class ContractGenerator {
 REQUIREMENTS:
 - Contract name: ${contractName}
 - Solidity version: ^0.8.19
-- Use OpenZeppelin npm imports: @openzeppelin/contracts/...
-- Follow ERC standards exactly
+- Keep it SIMPLE - use basic Solidity only
+- Only use OpenZeppelin if specifically requested (ERC20, ERC721, etc.)
+- For simple contracts like counters, use basic Solidity without external libraries
 - Include SPDX license
 - Production-ready code only
 - Include proper events, modifiers, and error handling
@@ -206,18 +204,24 @@ contract ${contractName} is ERC20, Ownable {
     }
 }`;
     } else {
-      // Basic contract template
+      // Basic contract template - NO OpenZeppelin for simple contracts
       return `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract ${contractName} is Ownable {
+contract ${contractName} {
     uint256 private value;
+    address public owner;
     
     event ValueChanged(uint256 newValue, address changedBy);
     
-    constructor() Ownable(msg.sender) {}
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the owner");
+        _;
+    }
+    
+    constructor() {
+        owner = msg.sender;
+    }
     
     function setValue(uint256 _value) external onlyOwner {
         value = _value;

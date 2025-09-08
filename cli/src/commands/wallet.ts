@@ -7,7 +7,7 @@ import * as path from 'path';
 import { ethers } from 'ethers';
 import * as CryptoJS from 'crypto-js';
 
-// Import from the SDK
+// Import from the published SDK package
 const { 
   createTestnetSDK, 
   createMainnetSDK,
@@ -16,7 +16,7 @@ const {
   NumberUtils,
   WalletFactory,
   WalletUtils
-} = require('../../../sdk/dist/index.js');interface WalletConfig {
+} = require('somnia-sdk-devkit');interface WalletConfig {
   address: string;
   encrypted?: string;
   type: 'imported' | 'created' | 'hd';

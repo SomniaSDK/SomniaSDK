@@ -7,14 +7,14 @@ import * as path from 'path';
 import { ethers } from 'ethers';
 import { HardhatCompiler, CompilationResult } from '../utils/hardhat-compiler.js';
 
-// Import from the SDK
+// Import from the published SDK package
 const { 
   createTestnetSDK, 
   createMainnetSDK,
   AddressUtils,
   NumberUtils,
   ErrorUtils
-} = require('../../../sdk/dist/index.js');
+} = require('somnia-sdk-devkit');
 
 interface WalletConfig {
   address: string;

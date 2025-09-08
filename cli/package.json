@@ -1,8 +1,14 @@
 {
-  "name": "@somnia/cli",
-  "version": "1.0.0",
+  "name": "somnia-cli-devkit",
+  "version": "1.0.8",
   "description": "Somnia blockchain development CLI with smart contract support",
   "main": "dist/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
   "bin": {
     "somnia": "./dist/index.js"
   },
@@ -37,7 +43,8 @@
     "hardhat": "^3.0.3",
     "inquirer": "^12.9.4",
     "ora": "^7.0.0",
-    "solc": "^0.5.0"
+    "solc": "^0.5.0",
+    "somnia-sdk-devkit": "^1.0.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

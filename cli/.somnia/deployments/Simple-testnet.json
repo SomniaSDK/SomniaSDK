@@ -1,0 +1,88 @@
+{
+  "contractName": "Simple",
+  "address": "0x3CEeD78CC8520bffB4DB9356866378C69B06Ab64",
+  "transactionHash": "0xf46efae66a19347c81babddbcc491dc3e80210357e9e4d740c17fa2315bec4c9",
+  "blockNumber": 170371693,
+  "gasUsed": "3280149",
+  "cost": "19680894000000000",
+  "network": "testnet",
+  "deployer": "0xdB630944101765cfb1f6836AE7579Eee1cdBbCBC",
+  "deployedAt": "2025-09-07T19:14:05.671Z",
+  "constructorArgs": [],
+  "sourcePath": "contracts\\Simple.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "CounterUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "counter",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCounter",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "incrementCounter",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initializeCounter",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "resetCounter",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061035b806100206000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80635b34b9661461005c57806366ee2978146100665780638ada066e1461007b578063c12327b81461009e578063dbdf7fce146100be575b600080fd5b6100646100c6565b005b61006433600090815260208190526040812055565b336000908152602081905260409020545b60405190815260200160405180910390f35b61008c6100ac366004610286565b60006020819052908152604090205481565b61006461021b565b336000908152602081905260409020546100fb5760405162461bcd60e51b81526004016100f2906102b6565b60405180910390fd5b33321461014a5760405162461bcd60e51b815260206004820181905260248201527f43616e6e6f742062652063616c6c65642066726f6d206120636f6e747261637460448201526064016100f2565b336000908152602081905260409020546103e8116101b65760405162461bcd60e51b815260206004820152602360248201527f436f756e7465722076616c756520697320616c7265616479206174206d6178696044820152626d756d60e81b60648201526084016100f2565b3360009081526020819052604081208054916101d1836102fe565b909155505033600081815260208181526040918290205491519182527fe8e4f1ef1872055fc8a48b9bbb125507e2478dcbaf35f2ce198dfbd3cb00d3f391015b60405180910390a2565b336000908152602081905260409020546102475760405162461bcd60e51b81526004016100f2906102b6565b33600081815260208181526040808320839055519182527fe8e4f1ef1872055fc8a48b9bbb125507e2478dcbaf35f2ce198dfbd3cb00d3f39101610211565b60006020828403121561029857600080fd5b81356001600160a01b03811681146102af57600080fd5b9392505050565b60208082526028908201527f5573657220646f6573206e6f74206861766520612076616c696420636f756e7460408201526765722076616c756560c01b606082015260800190565b60006001820161031e57634e487b7160e01b600052601160045260246000fd5b506001019056fea2646970667358221220e5c464999d929c4b4a976a486eff67fe7e9a26a4ff136fa6c13369123aa00dc364736f6c63430008130033"
+}

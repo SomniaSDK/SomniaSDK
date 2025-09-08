@@ -4,14 +4,14 @@ import ora from 'ora';
 
 export const networkCommand = new Command('network');
 
-// Import from the SDK
+// Import from the published SDK package
 const { 
   createTestnetSDK, 
   createMainnetSDK, 
   SomniaSDK,
   AddressUtils,
   NumberUtils
-} = require('../../../sdk/dist/index.js');
+} = require('somnia-sdk-devkit');
 
 // Get SDK instance
 function getSDK(network: 'testnet' | 'mainnet' = 'testnet'): any {
